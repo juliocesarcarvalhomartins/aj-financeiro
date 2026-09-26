@@ -1,0 +1,291 @@
+/* ===================================================================
+   A.J — seu diário financeiro
+   Tokens
+=================================================================== */
+:root{
+  --ink:        #3c2b30;   /* texto principal */
+  --ink-soft:   #7d6a6e;   /* texto secundário */
+  --paper:      #faf3ec;   /* fundo da página */
+  --card:       #fffcf8;   /* superfície dos cartões */
+  --line:       #e9dccf;   /* linhas finas */
+
+  --rose:       #b8677a;   /* entradas / ação primária */
+  --rose-deep:  #96495c;   /* hover */
+  --rose-tint:  #f3e3e0;
+
+  --clay:       #c98a55;   /* meta / destaque quente */
+  --clay-tint:  #f7ead9;
+
+  --plum:       #5b4258;   /* saídas / secundário escuro */
+  --plum-tint:  #ece3ea;
+
+  --sage:       #6f8462;   /* saldo positivo */
+  --danger:     #a3453f;
+
+  --font-display: 'Fraunces', serif;
+  --font-body: 'Karla', sans-serif;
+
+  --radius-lg: 20px;
+  --radius-md: 14px;
+  --radius-sm: 10px;
+}
+
+*{ box-sizing:border-box; }
+
+body{
+  margin:0;
+  background:var(--paper);
+  color:var(--ink);
+  font:16px/1.5 var(--font-body);
+  -webkit-font-smoothing:antialiased;
+}
+
+h1,h2,h3{ font-family:var(--font-display); margin:0; }
+::selection{ background:var(--rose-tint); }
+
+:focus-visible{ outline:2px solid var(--rose); outline-offset:2px; }
+
+button{ font:inherit; cursor:pointer; }
+
+.eyebrow{
+  font-size:.72rem; letter-spacing:.04em; color:var(--rose-deep);
+  font-weight:700; margin:0 0 8px; text-transform:none;
+}
+
+/* ===================================================================
+   Layout geral — a "lombada" à esquerda é a assinatura visual do app:
+   uma régua fina com três furos, lembrando uma folha de livro-caixa.
+=================================================================== */
+.app-shell{
+  max-width:1160px;
+  margin:auto;
+  padding:26px 40px 60px 56px;
+  position:relative;
+}
+.app-shell::before{
+  content:"";
+  position:absolute; left:26px; top:0; bottom:0; width:1px;
+  background:linear-gradient(var(--rose-tint), var(--line) 12%, var(--line) 88%, transparent);
+}
+.app-shell::after{
+  content:""; position:absolute; left:22px; top:120px; width:9px; height:9px;
+  border-radius:50%; background:var(--paper); border:1px solid var(--line);
+  box-shadow:0 220px 0 var(--paper), 0 220px 0 1px var(--line), 0 440px 0 var(--paper), 0 440px 0 1px var(--line);
+}
+
+/* ===================================================================
+   Topbar
+=================================================================== */
+.topbar{
+  display:flex; align-items:center; justify-content:space-between; gap:18px;
+  padding-bottom:16px; border-bottom:1px solid var(--line);
+}
+.brand{ display:flex; align-items:baseline; gap:11px; text-decoration:none; color:var(--ink-soft); }
+.brand-mark{
+  font:600 1.5rem var(--font-display); color:var(--card);
+  background:var(--ink); width:44px; height:44px; border-radius:50%;
+  display:grid; place-items:center; letter-spacing:-.03em;
+}
+.brand-tag{ font-size:.82rem; }
+.main-nav{ display:flex; gap:22px; margin-left:auto; }
+.main-nav a{ color:var(--ink-soft); font-size:.86rem; font-weight:600; text-decoration:none; }
+.main-nav a:hover{ color:var(--rose-deep); }
+.header-actions{ display:flex; align-items:center; gap:8px; }
+.icon-btn{
+  border:1px solid var(--line); background:var(--card); color:var(--ink-soft);
+  width:38px; height:38px; border-radius:50%; display:grid; place-items:center;
+}
+.icon-btn:hover{ color:var(--rose-deep); border-color:var(--rose); }
+.new-entry{
+  border:0; border-radius:999px; background:var(--rose); color:#fff9f7;
+  font-weight:700; padding:12px 20px; box-shadow:0 8px 20px #b8677a30;
+}
+.new-entry:hover{ background:var(--rose-deep); }
+.header-action{ padding:10px 16px; font-size:.85rem; }
+
+/* ===================================================================
+   Boas-vindas
+=================================================================== */
+.welcome{ padding:44px 0 30px; }
+.month-row{ display:flex; justify-content:flex-end; }
+.month-picker{
+  display:flex; gap:14px; align-items:center; background:var(--card);
+  border:1px solid var(--line); padding:9px 14px; border-radius:999px;
+}
+.month-picker button{ border:0; background:transparent; color:var(--rose); font-size:1.4rem; line-height:1; }
+.month-picker strong{ font-size:.88rem; min-width:120px; text-align:center; font-weight:700; }
+.welcome h1{
+  font-size:clamp(2.1rem,4.4vw,3.4rem); font-weight:500; line-height:1.08;
+  letter-spacing:-.03em; margin-top:18px; max-width:14ch;
+}
+.welcome h1 em{ font-style:italic; color:var(--rose-deep); }
+
+/* ===================================================================
+   Faixa-razão (resumo do mês, estilo livro-caixa)
+=================================================================== */
+.ledger-strip{
+  display:grid; grid-template-columns:repeat(4,1fr);
+  background:var(--card); border:1px solid var(--line); border-radius:var(--radius-lg);
+  overflow:hidden;
+}
+.ledger-item{
+  padding:22px 22px; display:flex; flex-direction:column; gap:10px;
+  border-left:1px solid var(--line);
+}
+.ledger-item:first-child{ border-left:0; }
+.ledger-item span{ font-size:.8rem; color:var(--ink-soft); }
+.ledger-item strong{
+  font:600 1.6rem var(--font-display); letter-spacing:-.02em;
+  font-variant-numeric:tabular-nums;
+}
+.ledger-item.accumulated{ background:var(--ink); }
+.ledger-item.accumulated span{ color:#d9c7ca; }
+.ledger-item.accumulated strong{ color:#fbeee7; }
+
+/* ===================================================================
+   Meta + origens
+=================================================================== */
+.content-grid{ display:grid; grid-template-columns:1.4fr 1fr; gap:16px; margin-top:16px; }
+.budget-card,.origin-card,.history-section{
+  border:1px solid var(--line); border-radius:var(--radius-lg); background:var(--card); padding:26px;
+}
+.card-heading{ display:flex; align-items:start; justify-content:space-between; }
+.card-heading h2,.origin-card h2,.history-title h2{ font-size:1.35rem; font-weight:500; }
+.text-button{ border:0; background:none; color:var(--rose-deep); font-weight:700; text-decoration:underline; padding:3px; font-size:.85rem; }
+
+.budget-amount{ font:600 2.15rem var(--font-display); letter-spacing:-.03em; margin:22px 0 14px; font-variant-numeric:tabular-nums; }
+.progress-track{ position:relative; height:10px; border-radius:20px; background:var(--rose-tint); overflow:visible; }
+.progress-fill{ height:100%; width:0; background:var(--rose); border-radius:20px; transition:width .35s ease; }
+.progress-target{
+  position:absolute; top:-4px; width:2px; height:18px; background:var(--clay);
+  left:var(--target-pos,100%);
+}
+.budget-details{ display:flex; justify-content:space-between; color:var(--ink-soft); font-size:.83rem; margin-top:14px; }
+
+.adjustment{
+  margin-top:16px; background:var(--clay-tint); border-radius:var(--radius-md);
+  padding:14px 16px; font-size:.86rem; line-height:1.45; color:#7a542c;
+}
+
+.origins-list{ margin-top:18px; }
+.origin-row{ display:flex; justify-content:space-between; align-items:center; padding:11px 0; border-bottom:1px dashed var(--line); font-size:.9rem; }
+.origin-row:last-child{ border:0; }
+.origin-name{ display:flex; align-items:center; gap:9px; color:var(--ink-soft); }
+.dot{ width:8px; height:8px; border-radius:50%; background:var(--clay); }
+.origin-row strong{ font-variant-numeric:tabular-nums; }
+.empty-small{ color:var(--ink-soft); font-size:.88rem; margin:22px 0; }
+
+/* ===================================================================
+   Histórico — visual de linha do tempo, não "cartão de app bancário"
+=================================================================== */
+.history-section{ margin-top:16px; }
+.history-title{ display:flex; align-items:center; justify-content:space-between; }
+.quiet{ padding:9px 15px; font-size:.86rem; }
+.entry-list{ margin-top:18px; }
+.entry-row{
+  display:grid; grid-template-columns:64px 1fr auto 30px; align-items:center; gap:14px;
+  padding:14px 0; border-top:1px solid var(--line); position:relative;
+}
+.entry-row::before{
+  content:""; position:absolute; left:26px; top:50%; width:6px; height:6px;
+  border-radius:50%; transform:translate(-50%,-50%);
+}
+.entry-row.in::before{ background:var(--rose); }
+.entry-row.out::before{ background:var(--plum); }
+.entry-date{ font-size:.78rem; color:var(--ink-soft); text-align:left; padding-left:14px; font-variant-numeric:tabular-nums; }
+.entry-name{ font-weight:700; }
+.entry-meta{ font-size:.78rem; color:var(--ink-soft); margin-top:3px; }
+.entry-value{ font-weight:700; font-variant-numeric:tabular-nums; color:var(--plum); }
+.entry-value.in{ color:var(--rose-deep); }
+.delete{ border:0; background:none; color:#c4a8ac; font-size:1.2rem; }
+.delete:hover{ color:var(--danger); }
+
+.empty-state{ text-align:center; padding:44px 20px; }
+.empty-state span{ color:var(--clay); font-size:1.3rem; }
+.empty-state h3{ font-size:1.3rem; margin:10px 0 4px; font-weight:500; }
+.empty-state p{ color:var(--ink-soft); margin:0 0 18px; font-size:.9rem; }
+
+.app-footer{ text-align:center; color:var(--ink-soft); font-size:.78rem; margin-top:34px; }
+
+/* ===================================================================
+   Diálogos (lançamento, meta, configurações)
+=================================================================== */
+dialog{ border:0; background:transparent; padding:20px; max-width:100%; width:480px; }
+dialog::backdrop{ background:#2c1e2280; }
+.dialog-card{ position:relative; background:var(--card); border-radius:var(--radius-lg); padding:32px; box-shadow:0 24px 60px #2a1a1e40; max-height:85vh; overflow:auto; }
+.dialog-card h2{ font-size:1.7rem; margin-bottom:20px; font-weight:500; }
+.dialog-copy{ color:var(--ink-soft); font-size:.9rem; line-height:1.5; }
+.close{ position:absolute; right:16px; top:14px; border:0; background:none; color:var(--ink-soft); font-size:1.6rem; }
+.dialog-card label{ display:block; font-size:.82rem; font-weight:700; margin:14px 0; color:var(--ink); }
+input,select{ display:block; width:100%; border:1px solid var(--line); border-radius:var(--radius-sm); background:#fffdfb; padding:12px; margin-top:7px; font:inherit; color:var(--ink); }
+input:focus,select:focus{ border-color:var(--rose); }
+.two-columns{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.type-toggle{ display:flex; gap:10px; }
+.type-toggle label{ margin:0; }
+.type-toggle input{ position:absolute; opacity:0; }
+.type-toggle span{ display:block; border:1px solid var(--line); border-radius:999px; padding:9px 16px; color:var(--ink-soft); font-weight:600; font-size:.88rem; }
+.type-toggle input:checked+span{ background:var(--rose-tint); border-color:var(--rose); color:var(--rose-deep); }
+.submit{ width:100%; margin-top:12px; }
+.dialog-actions{ display:flex; gap:10px; margin-top:18px; }
+
+.btn-primary,.btn-secondary,.btn-ghost,.btn-danger{
+  border-radius:999px; padding:12px 18px; font-weight:700; font-size:.88rem; border:1px solid transparent;
+}
+.btn-primary{ background:var(--rose); color:#fff9f7; width:100%; margin-top:6px; }
+.btn-primary:hover{ background:var(--rose-deep); }
+.btn-secondary{ background:var(--card); border-color:var(--line); color:var(--ink); }
+.btn-secondary:hover{ border-color:var(--rose); color:var(--rose-deep); }
+.btn-ghost{ background:none; color:var(--ink-soft); }
+.btn-danger{ background:var(--danger); color:#fff3f1; }
+.btn-danger:hover{ background:#8a3630; }
+.file-btn{ display:inline-flex; align-items:center; justify-content:center; text-align:center; cursor:pointer; }
+
+.settings-block{ padding:18px 0; border-top:1px solid var(--line); }
+.settings-block:first-of-type{ border-top:0; }
+.settings-block h3{ font-size:1rem; font-weight:700; margin-bottom:6px; }
+.settings-copy{ color:var(--ink-soft); font-size:.85rem; margin:6px 0 12px; }
+.settings-actions{ display:flex; gap:10px; flex-wrap:wrap; }
+.danger-block h3{ color:var(--danger); }
+
+/* ===================================================================
+   Cofre (tela de senha)
+=================================================================== */
+.vault-screen{
+  min-height:100vh; display:grid; place-items:center; background:var(--ink);
+  padding:24px;
+}
+.vault-card{
+  width:100%; max-width:420px; background:var(--paper); border-radius:24px;
+  padding:40px 34px; text-align:center; box-shadow:0 30px 80px #00000055;
+}
+.seal{ width:60px; height:60px; margin:0 auto 22px; color:var(--rose); }
+.seal svg{ width:100%; height:100%; fill:currentColor; }
+.vault-card h1{ font-size:1.7rem; font-weight:500; margin:8px 0 10px; letter-spacing:-.02em; }
+.vault-copy{ color:var(--ink-soft); font-size:.9rem; line-height:1.55; margin:0 0 22px; }
+.vault-pane form label{ text-align:left; display:block; font-size:.82rem; font-weight:700; margin:14px 0; color:var(--ink); }
+.vault-error{ color:var(--danger); font-size:.83rem; text-align:left; margin:10px 0 0; }
+.link-quiet{ border:0; background:none; color:var(--ink-soft); text-decoration:underline; font-size:.83rem; margin-top:18px; }
+
+/* ===================================================================
+   Responsivo
+=================================================================== */
+@media(max-width:760px){
+  .app-shell{ padding:22px 18px 50px 34px; }
+  .main-nav{ display:none; }
+  .welcome h1{ max-width:none; }
+  .ledger-strip{ grid-template-columns:repeat(2,1fr); }
+  .ledger-item:nth-child(2){ border-left:1px solid var(--line); }
+  .ledger-item:nth-child(3){ border-left:0; border-top:1px solid var(--line); }
+  .ledger-item:nth-child(4){ border-top:1px solid var(--line); }
+  .content-grid{ grid-template-columns:1fr; }
+  .entry-row{ grid-template-columns:48px 1fr auto 24px; }
+  .entry-date{ padding-left:8px; }
+  .two-columns{ grid-template-columns:1fr; }
+  .header-action span{ display:none; }
+}
+
+@media (prefers-reduced-motion: reduce){
+  *{ transition:none !important; }
+}
+/* A versão de uso único não exibe cofre ou senha. */
+.vault-screen[hidden]{display:none!important}

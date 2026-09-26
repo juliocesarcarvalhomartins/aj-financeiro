@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#3c2b30" />
+  <title>A.J — seu diário financeiro</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Karla:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='18' fill='%233c2b30'/%3E%3Cpath d='M19 44 31 18h4l11 26h-6l-2-5H27l-2 5h-6Zm10-10h7l-3.5-9-3.5 9Z' fill='%23f3c8ad'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ============ COFRE (tela de bloqueio) ============ -->
+  <div id="vault-screen" class="vault-screen" hidden>
+    <div class="vault-card">
+      <div class="seal" aria-hidden="true">
+        <svg viewBox="0 0 60 60"><circle cx="30" cy="30" r="28"/><path d="M19 40 29 18h2l10 22h-5l-2-5H26l-2 5h-5Zm8-9h6l-3-7.5-3 7.5Z"/></svg>
+      </div>
+
+      <div id="vault-setup" class="vault-pane">
+        <p class="eyebrow">PRIMEIRO ACESSO</p>
+        <h1>Vamos proteger o seu diário.</h1>
+        <p class="vault-copy">Crie uma senha. Ela é a única chave que embaralha o que você guarda aqui — sem ela, ninguém abre, nem mesmo você. Guarde-a num lugar de confiança.</p>
+        <form id="setup-form" autocomplete="off">
+          <label>Crie uma senha
+            <input name="senha1" type="password" minlength="4" required autocomplete="new-password">
+          </label>
+          <label>Confirme a senha
+            <input name="senha2" type="password" minlength="4" required autocomplete="new-password">
+          </label>
+          <p class="vault-error" id="setup-error" hidden></p>
+          <button class="btn-primary" type="submit">Criar meu diário</button>
+        </form>
+      </div>
+
+      <div id="vault-unlock" class="vault-pane" hidden>
+        <p class="eyebrow">FECHADO POR SEGURANÇA</p>
+        <h1>Que bom te ver de novo.</h1>
+        <p class="vault-copy">Digite sua senha para abrir seus lançamentos.</p>
+        <form id="unlock-form" autocomplete="off">
+          <label>Senha
+            <input name="senha" type="password" required autocomplete="current-password" autofocus>
+          </label>
+          <p class="vault-error" id="unlock-error" hidden></p>
+          <button class="btn-primary" type="submit">Abrir</button>
+        </form>
+        <button class="link-quiet" id="forgot-link" type="button">Esqueci minha senha</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Confirmação de "esqueci a senha" (apaga tudo, sem recuperação possível) -->
+  <dialog id="forgot-dialog">
+    <form id="forgot-form" class="dialog-card small-dialog" method="dialog">
+      <p class="eyebrow">ATENÇÃO</p>
+      <h2>Isso apaga tudo</h2>
+      <p class="dialog-copy">Como a senha é a chave que embaralha seus dados, sem ela não existe forma de recuperá-los. Redefinir a senha significa apagar todos os lançamentos e começar um diário novo.</p>
+      <div class="dialog-actions">
+        <button type="button" class="btn-ghost" id="cancel-forgot">Cancelar</button>
+        <button type="submit" class="btn-danger" id="confirm-forgot">Apagar e recomeçar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- ============ APP ============ -->
+  <div id="app-root" class="app-shell">
+    <header class="topbar">
+      <a class="brand" href="#inicio" aria-label="A.J início">
+        <span class="brand-mark">AJ</span>
+        <span class="brand-tag">seu dinheiro, do seu jeito</span>
+      </a>
+      <nav class="main-nav" aria-label="Navegação principal">
+        <a href="#inicio">Início</a><a href="#historico">Lançamentos</a><a href="#meta">Meta</a>
+      </nav>
+      <div class="header-actions">
+        <button class="icon-btn" id="open-settings" aria-label="Configurações e backup" title="Configurações">
+          <svg viewBox="0 0 24 24" width="19" height="19"><path d="M12 15.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4Zm8-3.2a7.9 7.9 0 0 0-.13-1.42l1.87-1.46a.55.55 0 0 0 .13-.7l-1.77-3.06a.55.55 0 0 0-.66-.24l-2.2.88a8 8 0 0 0-1.23-.71l-.33-2.34A.55.55 0 0 0 15.14 2H10.9a.55.55 0 0 0-.55.45l-.33 2.34c-.44.18-.85.42-1.23.71l-2.2-.88a.55.55 0 0 0-.66.24L4.16 8.42a.55.55 0 0 0 .13.7L6.16 10.6c-.05.46-.05.93 0 1.4l-1.87 1.47a.55.55 0 0 0-.13.7l1.77 3.05c.14.24.43.34.66.24l2.2-.88c.38.29.79.53 1.23.71l.33 2.34c.05.27.29.45.55.45h4.24c.27 0 .5-.18.55-.45l.33-2.34c.44-.18.85-.42 1.23-.71l2.2.88c.23.1.52 0 .66-.24l1.77-3.05a.55.55 0 0 0-.13-.7l-1.87-1.47c.08-.46.11-.93.13-1.42Z" fill="currentColor"/></svg>
+        </button>
+        <button class="icon-btn" id="lock-now" aria-label="Bloquear agora" title="Bloquear" hidden>
+          <svg viewBox="0 0 24 24" width="18" height="18"><path d="M6 10V8a6 6 0 1 1 12 0v2h1a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1h1Zm2 0h8V8a4 4 0 1 0-8 0v2Zm4 5.5a1.5 1.5 0 0 1 1 2.6V19a1 1 0 1 1-2 0v-.9a1.5 1.5 0 0 1 1-2.6Z" fill="currentColor"/></svg>
+        </button>
+        <button class="new-entry header-action" id="open-modal">+ Adicionar</button>
+      </div>
+    </header>
+
+    <section class="welcome" id="inicio">
+      <div class="month-row">
+        <div class="month-picker"><button id="previous-month" aria-label="Mês anterior">‹</button><strong id="month-label">Setembro 2026</strong><button id="next-month" aria-label="Próximo mês">›</button></div>
+      </div>
+      <h1 id="mood-line">Seu mês, com <em>leveza.</em></h1>
+    </section>
+
+    <!-- Faixa-razão: resumo do mês em formato de "livro-caixa", não cards soltos -->
+    <section class="ledger-strip" aria-label="Resumo financeiro">
+      <div class="ledger-item">
+        <span>Entradas</span>
+        <strong id="income-total">R$ 0,00</strong>
+      </div>
+      <div class="ledger-item">
+        <span>Saídas</span>
+        <strong id="expense-total">R$ 0,00</strong>
+      </div>
+      <div class="ledger-item">
+        <span>Saldo do mês</span>
+        <strong id="balance-total">R$ 0,00</strong>
+      </div>
+      <div class="ledger-item accumulated">
+        <span>Saldo geral</span>
+        <strong id="accumulated-total">R$ 0,00</strong>
+      </div>
+    </section>
+
+    <section class="content-grid" id="meta">
+      <article class="budget-card">
+        <div class="card-heading">
+          <div><p class="eyebrow">SEU LIMITE</p><h2>Meta de gastos</h2></div>
+          <button class="text-button" id="edit-budget">Editar</button>
+        </div>
+        <div class="budget-amount" id="budget-amount">R$ 0,00</div>
+        <div class="progress-track"><div class="progress-target" id="progress-target"></div><div class="progress-fill" id="progress-fill"></div></div>
+        <div class="budget-details"><span id="spent-label">R$ 0,00 gastos</span><span id="available-label">Defina sua meta</span></div>
+      </article>
+
+      <article class="origin-card">
+        <p class="eyebrow">ORIGEM DAS ENTRADAS</p><h2>De onde veio seu dinheiro</h2>
+        <div id="origins-list" class="origins-list"><p class="empty-small">Suas entradas aparecerão aqui.</p></div>
+      </article>
+    </section>
+
+    <div class="adjustment" id="adjustment-message">Defina sua meta mensal para acompanhar seus gastos com carinho.</div>
+
+    <section class="history-section" id="historico">
+      <div class="history-title"><div><p class="eyebrow">MOVIMENTAÇÕES</p><h2>Seu histórico</h2></div><button class="new-entry quiet" id="open-modal-2">+ Adicionar</button></div>
+      <div class="entry-list" id="entry-list">
+        <div class="empty-state"><span>✦</span><h3>Seu mês começa aqui</h3><p>Registre uma entrada ou saída para ver tudo organizado.</p><button class="new-entry" id="open-modal-3">Adicionar lançamento</button></div>
+      </div>
+    </section>
+
+    <footer class="app-footer">Seus dados ficam só neste computador, embaralhados com a sua senha.</footer>
+  </div>
+
+  <dialog id="entry-dialog">
+    <form id="entry-form" class="dialog-card">
+      <button type="button" class="close" id="close-modal" aria-label="Fechar">×</button>
+      <p class="eyebrow">NOVO LANÇAMENTO</p><h2>Vamos registrar?</h2>
+      <div class="type-toggle"><label><input type="radio" name="tipo" value="entrada" checked> <span>Entrada</span></label><label><input type="radio" name="tipo" value="saida"> <span>Saída</span></label></div>
+      <label>Origem<select name="origem" required><option value="papelaria">Papelaria</option><option value="clt">CLT</option><option value="pessoal">Pessoal</option></select></label>
+      <div class="two-columns"><label>Valor<input name="valor" inputmode="decimal" placeholder="0,00" required></label><label>Data<input name="data" type="date" required></label></div>
+      <label>Descrição<input name="descricao" placeholder="Ex.: venda de cadernos" required maxlength="80"></label>
+      <button class="new-entry submit" type="submit">Salvar lançamento</button>
+    </form>
+  </dialog>
+
+  <dialog id="budget-dialog">
+    <form id="budget-form" class="dialog-card small-dialog">
+      <button type="button" class="close" id="close-budget" aria-label="Fechar">×</button><p class="eyebrow">SUA META</p><h2>Quanto você quer gastar por mês?</h2>
+      <label>Valor mensal<input name="orcamento" inputmode="decimal" placeholder="0,00" required></label><button class="new-entry submit" type="submit">Salvar meta</button>
+    </form>
+  </dialog>
+
+  <!-- Configurações: trocar senha, backup, apagar tudo -->
+  <dialog id="settings-dialog">
+    <div class="dialog-card">
+      <button type="button" class="close" id="close-settings" aria-label="Fechar">×</button>
+      <p class="eyebrow">CONFIGURAÇÕES</p><h2>Seu diário financeiro</h2>
+
+      <div class="settings-block" hidden>
+        <h3>Trocar senha</h3>
+        <form id="change-password-form">
+          <label>Nova senha<input name="nova1" type="password" minlength="4" required autocomplete="new-password"></label>
+          <label>Confirme<input name="nova2" type="password" minlength="4" required autocomplete="new-password"></label>
+          <p class="vault-error" id="change-password-error" hidden></p>
+          <button class="btn-secondary" type="submit">Salvar nova senha</button>
+        </form>
+      </div>
+
+      <div class="settings-block">
+        <h3>Backup</h3>
+        <p class="settings-copy">Salve uma cópia dos seus lançamentos sempre que quiser.</p>
+        <div class="settings-actions">
+          <button class="btn-secondary" id="export-backup">Exportar backup (.json)</button>
+          <label class="btn-secondary file-btn">Importar backup
+            <input type="file" id="import-backup" accept="application/json" hidden>
+          </label>
+        </div>
+      </div>
+
+      <div class="settings-block danger-block">
+        <h3>Apagar tudo</h3>
+        <p class="settings-copy">Remove todos os lançamentos deste navegador. Não tem volta.</p>
+        <button class="btn-danger" id="wipe-all">Apagar tudo e recomeçar</button>
+      </div>
+    </div>
+  </dialog>
+
+  <script src="app.js"></script>
+</body>
+</html>
