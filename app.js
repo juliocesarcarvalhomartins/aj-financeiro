@@ -16,6 +16,18 @@
 ===================================================================== */
 
 const $ = (selector) => document.querySelector(selector);
+/* Camada de modal compatível: evita que o formulário fique invisível em alguns navegadores. */
+function openDialog(selector) {
+  const dialog = $(selector);
+  if (dialog.open) return;
+  if (typeof dialog.showModal === 'function') dialog.showModal();
+  else dialog.setAttribute('open', '');
+}
+function closeDialog(selector) {
+  const dialog = $(selector);
+  if (typeof dialog.close === 'function') dialog.close();
+  else dialog.removeAttribute('open');
+}
 
 const KEY_SALT  = 'aj-salt-v2';
 const KEY_VAULT = 'aj-vault-v2';
@@ -137,8 +149,8 @@ $('#unlock-form').addEventListener('submit', async (event) => {
   }
 });
 
-$('#forgot-link').addEventListener('click', () => $('#forgot-dialog').showModal());
-$('#cancel-forgot').addEventListener('click', () => $('#forgot-dialog').close());
+$('#forgot-link').addEventListener('click', () => openDialog('#forgot-dialog'));
+$('#cancel-forgot').addEventListener('click', () => closeDialog('#forgot-dialog'));
 $('#forgot-form').addEventListener('submit', () => {
   localStorage.removeItem(KEY_SALT);
   localStorage.removeItem(KEY_VAULT);
@@ -159,8 +171,8 @@ $('#toggle-theme').addEventListener('click', () => {
 /* ---------------------------------------------------------------------
    Configurações: trocar senha, backup, apagar tudo
 --------------------------------------------------------------------- */
-$('#open-settings').addEventListener('click', () => $('#settings-dialog').showModal());
-$('#close-settings').addEventListener('click', () => $('#settings-dialog').close());
+$('#open-settings').addEventListener('click', () => openDialog('#settings-dialog'));
+$('#close-settings').addEventListener('click', () => closeDialog('#settings-dialog'));
 
 $('#change-password-form').addEventListener('submit', async (event) => {
   event.preventDefault();
@@ -173,7 +185,7 @@ $('#change-password-form').addEventListener('submit', async (event) => {
   localStorage.setItem(KEY_SALT, toB64(salt));
   await persist();
   event.target.reset();
-  $('#settings-dialog').close();
+  closeDialog('#settings-dialog');
 });
 
 $('#export-backup').addEventListener('click', () => {
@@ -196,7 +208,7 @@ $('#import-backup').addEventListener('change', async (event) => {
     if (!confirm('Isso substitui os dados atuais pelos do arquivo importado. Continuar?')) { event.target.value = ''; return; }
     state = { entries: parsed.entries, config: parsed.config || { orcamento_mensal: 0 } };
     await persist();
-    $('#settings-dialog').close();
+    closeDialog('#settings-dialog');
     render();
   } catch {
     alert('Não consegui ler esse arquivo como um backup do A.J.');
@@ -211,7 +223,7 @@ $('#wipe-all').addEventListener('click', () => {
   localStorage.removeItem(KEY_VAULT);
   clearLegacyPlainData();
   state = { entries: [], config: { orcamento_mensal: 0 } };
-  $('#settings-dialog').close();
+  closeDialog('#settings-dialog');
   render();
 });
 
@@ -336,14 +348,14 @@ function render() {
 function openEntryDialog() {
   $('#entry-form').reset();
   $('#entry-form [name="data"]').value = new Date().toISOString().slice(0, 10);
-  $('#entry-dialog').showModal();
+  openDialog('#entry-dialog');
 }
 ['#open-modal', '#open-modal-2'].forEach(id => $(id)?.addEventListener('click', openEntryDialog));
-$('#close-modal').addEventListener('click', () => $('#entry-dialog').close());
-$('#close-budget').addEventListener('click', () => $('#budget-dialog').close());
+$('#close-modal').addEventListener('click', () => closeDialog('#entry-dialog'));
+$('#close-budget').addEventListener('click', () => closeDialog('#budget-dialog'));
 $('#edit-budget').addEventListener('click', () => {
   $('#budget-form [name="orcamento"]').value = state.config.orcamento_mensal ? String(state.config.orcamento_mensal).replace('.', ',') : '';
-  $('#budget-dialog').showModal();
+  openDialog('#budget-dialog');
 });
 $('#previous-month').addEventListener('click', () => { displayedMonth.setMonth(displayedMonth.getMonth() - 1); render(); });
 $('#next-month').addEventListener('click', () => { displayedMonth.setMonth(displayedMonth.getMonth() + 1); render(); });
@@ -357,7 +369,7 @@ $('#entry-form').addEventListener('submit', async (event) => {
   await persist();
   displayedMonth = new Date(`${entry.data}T12:00:00`);
   displayedMonth.setDate(1);
-  $('#entry-dialog').close();
+  closeDialog('#entry-dialog');
   render();
 });
 
@@ -365,7 +377,7 @@ $('#budget-form').addEventListener('submit', async (event) => {
   event.preventDefault();
   state.config.orcamento_mensal = parseMoney(new FormData(event.target).get('orcamento'));
   await persist();
-  $('#budget-dialog').close();
+  closeDialog('#budget-dialog');
   render();
 });
 
