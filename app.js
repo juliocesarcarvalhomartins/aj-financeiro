@@ -90,7 +90,7 @@ function clearLegacyPlainData() {
 /* ---------------------------------------------------------------------
    Tela de cofre (criação de senha / desbloqueio)
 --------------------------------------------------------------------- */
-function showVaultScreen() { $('#vault-screen').hidden = true; $('#app-root').hidden = false; }
+function showVaultScreen() { $('#vault-screen').hidden = false; $('#app-root').hidden = true; }
 function showApp() {
   $('#vault-screen').hidden = true;
   $('#app-root').hidden = false;
@@ -99,7 +99,10 @@ function showApp() {
 }
 
 function initVaultScreen() {
-  showApp();
+  const hasExisting = hasVault();
+  $('#vault-setup').hidden = hasExisting;
+  $('#vault-unlock').hidden = !hasExisting;
+  showVaultScreen();
 }
 
 $('#setup-form').addEventListener('submit', async (event) => {
@@ -151,11 +154,22 @@ $('#forgot-form').addEventListener('submit', () => {
   clearLegacyPlainData();
   vaultKey = null;
   state = { entries: [], config: { orcamento_mensal: 0 } };
-  initVaultScreen();
+/* Tema visual local: Rosa Delicado ↔ Noite Elegante. */
+const THEME_KEY = 'aj-theme-v1';
+function applyTheme(theme) { document.body.classList.toggle('night-elegant', theme === 'night'); }
+applyTheme(localStorage.getItem(THEME_KEY) || 'rose');
+$('#toggle-theme').addEventListener('click', () => {
+  const next = document.body.classList.contains('night-elegant') ? 'rose' : 'night';
+  localStorage.setItem(THEME_KEY, next); applyTheme(next);
+});
+initVaultScreen();
 });
 
 function lockNow() {
-  render();
+  vaultKey = null;
+  state = { entries: [], config: { orcamento_mensal: 0 } };
+  clearTimeout(idleTimer);
+  initVaultScreen();
 }
 $('#lock-now').addEventListener('click', lockNow);
 
