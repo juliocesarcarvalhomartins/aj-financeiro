@@ -307,7 +307,7 @@ function render() {
   const origins = ['papelaria', 'clt', 'pessoal']
     .map(origin => ({ origin, value: entries.filter(e => e.tipo === 'entrada' && e.origem === origin).reduce((sum, e) => sum + e.valor, 0) }))
     .filter(item => item.value > 0);
-  const originIcons = { papelaria: '✎', clt: '☀', pessoal: '♥' };
+  const originIcons = { papelaria: '✎', clt: '💼', pessoal: '♡' };
   $('#origins-list').innerHTML = origins.length
     ? origins.map(item => `<div class="origin-row origin-${item.origin}"><span class="origin-name"><i class="dot">${originIcons[item.origin]}</i>${labelOrigin(item.origin)}</span><strong>${money(item.value)}</strong></div>`).join('')
     : '<p class="empty-small">Suas entradas aparecerão aqui.</p>';
