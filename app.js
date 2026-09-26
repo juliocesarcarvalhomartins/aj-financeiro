@@ -225,6 +225,24 @@ function labelOrigin(origin) { return ({ papelaria: 'Papelaria', clt: 'CLT', pes
 function formatDate(date) { return new Date(`${date}T12:00:00`).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }).replace('.', ''); }
 function escapeHtml(value) { const span = document.createElement('span'); span.textContent = value; return span.innerHTML; }
 
+/* Categorias visuais: podem ser escolhidas no formulário ou reconhecidas pela descrição. */
+const CATEGORY_DETAILS = {
+  roupa: { label: 'Roupa', icon: '👗', words: ['roupa', 'blusa', 'calça', 'vestido', 'sapato', 'tênis', 'bolsa', 'moda'] },
+  alimentacao: { label: 'Comida', icon: '🍲', words: ['comida', 'almoço', 'jantar', 'lanche', 'mercado', 'restaurante', 'ifood', 'padaria', 'café'] },
+  psicologia: { label: 'Psicologia', icon: '🧠', words: ['psicóloga', 'psicologo', 'psicologia', 'terapia', 'terapeuta', 'sessão'] },
+  beleza: { label: 'Beleza', icon: '💄', words: ['beleza', 'salão', 'cabelo', 'unha', 'maquiagem', 'estética'] },
+  casa: { label: 'Casa', icon: '🏠', words: ['casa', 'aluguel', 'luz', 'água', 'internet', 'limpeza'] },
+  transporte: { label: 'Transporte', icon: '🚗', words: ['uber', '99', 'gasolina', 'combustível', 'ônibus', 'transporte'] },
+  saude: { label: 'Saúde', icon: '✚', words: ['médico', 'remédio', 'farmácia', 'exame', 'saúde'] },
+  lazer: { label: 'Lazer', icon: '✦', words: ['cinema', 'viagem', 'show', 'lazer', 'passeio'] },
+  outros: { label: 'Outros', icon: '♥', words: [] }
+};
+function categoryFor(entry) {
+  if (entry.categoria && entry.categoria !== 'auto' && CATEGORY_DETAILS[entry.categoria]) return entry.categoria;
+  const description = (entry.descricao || '').toLocaleLowerCase('pt-BR');
+  return Object.keys(CATEGORY_DETAILS).find(key => CATEGORY_DETAILS[key].words.some(word => description.includes(word))) || 'outros';
+}
+
 function calculate(month) {
   const filtered = state.entries.filter(e => e.data.startsWith(month));
   const income = filtered.filter(e => e.tipo === 'entrada').reduce((sum, e) => sum + e.valor, 0);
@@ -299,7 +317,7 @@ function render() {
       <div class="entry-row ${entry.tipo === 'entrada' ? 'in' : 'out'}">
         <span class="entry-date">${formatDate(entry.data)}</span>
         <div><div class="entry-name">${escapeHtml(entry.descricao)}</div><div class="entry-meta">${labelOrigin(entry.origem)}</div></div>
-        <span class="entry-value ${entry.tipo === 'entrada' ? 'in' : ''}">${entry.tipo === 'entrada' ? '+' : '−'} ${money(entry.valor)}</span>
+        <span class="entry-value ${entry.tipo === 'entrada' ? 'in' : ''}"><i class="category-icon category-${categoryFor(entry)}" title="${CATEGORY_DETAILS[categoryFor(entry)].label}">${CATEGORY_DETAILS[categoryFor(entry)].icon}</i>${entry.tipo === 'entrada' ? '+' : '−'} ${money(entry.valor)}</span>
         <button class="delete" data-id="${entry.id}" aria-label="Excluir lançamento">×</button>
       </div>`).join('')
     : '<div class="empty-state"><span>✦</span><h3>Seu mês começa aqui</h3><p>Registre uma entrada ou saída para ver tudo organizado.</p><button class="new-entry" id="open-modal-3">Adicionar lançamento</button></div>';
@@ -333,7 +351,7 @@ $('#next-month').addEventListener('click', () => { displayedMonth.setMonth(displ
 $('#entry-form').addEventListener('submit', async (event) => {
   event.preventDefault();
   const data = Object.fromEntries(new FormData(event.target));
-  const entry = { id: crypto.randomUUID(), tipo: data.tipo, origem: data.origem, descricao: data.descricao.trim(), valor: parseMoney(data.valor), data: data.data };
+  const entry = { id: crypto.randomUUID(), tipo: data.tipo, origem: data.origem, categoria: data.categoria, descricao: data.descricao.trim(), valor: parseMoney(data.valor), data: data.data };
   if (entry.valor <= 0 || !entry.descricao) return;
   state.entries.push(entry);
   await persist();
