@@ -24,11 +24,9 @@ const KEY_VAULT = 'aj-vault-v2';
 const LEGACY_ENTRIES = 'aj-lancamentos-v1';
 const LEGACY_CONFIG  = 'aj-config-v1';
 
-let vaultKey = null;                 // CryptoKey em memória, nunca persistida
 let state = { entries: [], config: { orcamento_mensal: 0 } };
 let displayedMonth = new Date();
 displayedMonth.setDate(1);
-let idleTimer = null;
 
 /* ---------------------------------------------------------------------
    Criptografia
@@ -90,20 +88,15 @@ function clearLegacyPlainData() {
 /* ---------------------------------------------------------------------
    Tela de cofre (criação de senha / desbloqueio)
 --------------------------------------------------------------------- */
-function showVaultScreen() { $('#vault-screen').hidden = false; $('#app-root').hidden = true; }
 function showApp() {
   $('#vault-screen').hidden = true;
   $('#app-root').hidden = false;
-  resetIdleTimer();
+  $('#lock-now').hidden = true;
   render();
 }
 
-function initVaultScreen() {
-  const hasExisting = hasVault();
-  $('#vault-setup').hidden = hasExisting;
-  $('#vault-unlock').hidden = !hasExisting;
-  showVaultScreen();
-}
+// Uso único: abre diretamente e lê os dados deste navegador, sem senha.
+function initDirectApp() { state = readLegacyPlainData(); showApp(); }
 
 $('#setup-form').addEventListener('submit', async (event) => {
   event.preventDefault();
@@ -114,7 +107,6 @@ $('#setup-form').addEventListener('submit', async (event) => {
   errorEl.hidden = true;
 
   const salt = randomBytes(16);
-  vaultKey = await deriveKey(p1, salt);
   localStorage.setItem(KEY_SALT, toB64(salt));
 
   // migra dados antigos (texto puro) se existirem, para não perder histórico
@@ -135,8 +127,7 @@ $('#unlock-form').addEventListener('submit', async (event) => {
     const salt = fromB64(localStorage.getItem(KEY_SALT));
     const key = await deriveKey(password, salt);
     const decrypted = await decryptState(key, localStorage.getItem(KEY_VAULT));
-    vaultKey = key;
-    state = decrypted;
+  state = decrypted;
     errorEl.hidden = true;
     event.target.reset();
     showApp();
@@ -152,9 +143,11 @@ $('#forgot-form').addEventListener('submit', () => {
   localStorage.removeItem(KEY_SALT);
   localStorage.removeItem(KEY_VAULT);
   clearLegacyPlainData();
-  vaultKey = null;
   state = { entries: [], config: { orcamento_mensal: 0 } };
-/* Tema visual local: Rosa Delicado ↔ Noite Elegante. */
+  initDirectApp();
+});
+
+/* Tema visual local: Rosa Borboleta ↔ Noite Ametista. */
 const THEME_KEY = 'aj-theme-v1';
 function applyTheme(theme) { document.body.classList.toggle('night-elegant', theme === 'night'); }
 applyTheme(localStorage.getItem(THEME_KEY) || 'rose');
@@ -162,26 +155,6 @@ $('#toggle-theme').addEventListener('click', () => {
   const next = document.body.classList.contains('night-elegant') ? 'rose' : 'night';
   localStorage.setItem(THEME_KEY, next); applyTheme(next);
 });
-initVaultScreen();
-});
-
-function lockNow() {
-  vaultKey = null;
-  state = { entries: [], config: { orcamento_mensal: 0 } };
-  clearTimeout(idleTimer);
-  initVaultScreen();
-}
-$('#lock-now').addEventListener('click', lockNow);
-
-// bloqueio automático por inatividade (10 minutos)
-const IDLE_LIMIT_MS = 10 * 60 * 1000;
-function resetIdleTimer() {
-  clearTimeout(idleTimer);
-  idleTimer = setTimeout(lockNow, IDLE_LIMIT_MS);
-}
-['click', 'keydown', 'mousemove', 'scroll'].forEach(evt =>
-  document.addEventListener(evt, () => { if (vaultKey) resetIdleTimer(); }, { passive: true })
-);
 
 /* ---------------------------------------------------------------------
    Configurações: trocar senha, backup, apagar tudo
@@ -197,7 +170,6 @@ $('#change-password-form').addEventListener('submit', async (event) => {
   if (p1 !== p2) { errorEl.textContent = 'As senhas não são iguais.'; errorEl.hidden = false; return; }
   errorEl.hidden = true;
   const salt = randomBytes(16);
-  vaultKey = await deriveKey(p1, salt);
   localStorage.setItem(KEY_SALT, toB64(salt));
   await persist();
   event.target.reset();
@@ -382,5 +354,4 @@ $('#budget-form').addEventListener('submit', async (event) => {
 /* ---------------------------------------------------------------------
    Início
 --------------------------------------------------------------------- */
-state = readLegacyPlainData();
-render();
+initDirectApp();
