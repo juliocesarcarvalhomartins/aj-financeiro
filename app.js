@@ -287,9 +287,17 @@ function render() {
   $('#spent-label').textContent = `${money(expense)} gastos`;
 
   const moodLine = $('#mood-line');
-  if (balance > 0) moodLine.innerHTML = 'Seu mês, com <em>leveza.</em>';
-  else if (balance < 0) moodLine.innerHTML = 'Um passo de <em>cada vez.</em>';
-  else moodLine.innerHTML = 'Um novo mês, <em>em aberto.</em>';
+  const moodSupport = $('#mood-support');
+  if (balance > 0) {
+    moodLine.innerHTML = 'Seu dinheiro está florescendo. <em>Você está indo bem.</em>';
+    moodSupport.textContent = 'Seu saldo está positivo — celebre o cuidado que você teve com você.';
+  } else if (balance < 0) {
+    moodLine.innerHTML = 'Respira: um passo de <em>cada vez.</em>';
+    moodSupport.textContent = 'Olhar com carinho para os números já é uma forma de se reorganizar.';
+  } else {
+    moodLine.innerHTML = 'Um novo mês, uma página <em>em aberto.</em>';
+    moodSupport.textContent = 'Registre com calma. O importante é começar do seu jeito.';
+  }
 
   const percent = adjustedBudget ? Math.min(100, (expense / adjustedBudget) * 100) : 0;
   $('#progress-fill').style.width = `${percent}%`;
@@ -298,6 +306,7 @@ function render() {
   $('#available-label').textContent = baseBudget
     ? (expense <= adjustedBudget ? `${money(adjustedBudget - expense)} disponíveis` : `${money(expense - adjustedBudget)} acima da meta`)
     : 'Defina sua meta';
+  $('#goal-badge').textContent = !baseBudget ? '✦ Escolha uma meta com carinho' : expense <= adjustedBudget ? '♥ Você está respeitando o seu ritmo' : '✦ Vamos reorganizar juntas, sem culpa';
 
   const adjustment = $('#adjustment-message');
   if (!baseBudget) adjustment.textContent = 'Defina sua meta mensal para acompanhar seus gastos com carinho.';
@@ -308,8 +317,9 @@ function render() {
   const origins = ['papelaria', 'clt', 'pessoal']
     .map(origin => ({ origin, value: entries.filter(e => e.tipo === 'entrada' && e.origem === origin).reduce((sum, e) => sum + e.valor, 0) }))
     .filter(item => item.value > 0);
+  const originIcons = { papelaria: '✎', clt: '☀', pessoal: '♥' };
   $('#origins-list').innerHTML = origins.length
-    ? origins.map(item => `<div class="origin-row"><span class="origin-name"><i class="dot"></i>${labelOrigin(item.origin)}</span><strong>${money(item.value)}</strong></div>`).join('')
+    ? origins.map(item => `<div class="origin-row origin-${item.origin}"><span class="origin-name"><i class="dot">${originIcons[item.origin]}</i>${labelOrigin(item.origin)}</span><strong>${money(item.value)}</strong></div>`).join('')
     : '<p class="empty-small">Suas entradas aparecerão aqui.</p>';
 
   $('#entry-list').innerHTML = entries.length
